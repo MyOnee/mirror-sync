@@ -1,0 +1,31 @@
+name: Mirror APT to Cloudflare R2
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"  # Jalankan setiap 12 jam
+  workflow_dispatch:  # Bisa dijalankan manual
+
+jobs:
+  mirror:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y apt-mirror awscli
+
+      - name: Setup APT Mirror
+        run: |
+          mkdir -p /var/spool/apt-mirror/mirror
+          curl -L https://file.curvee.eu.org/termux.txt -o /etc/apt/mirror.list
+
+      - name: Run APT Mirror
+        run: sudo apt-mirror
+
+      - name: Sync to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          aws s3 sync /var/spool/apt-mirror/mirror s3://${{ secrets.R2_BUCKET_NAME }} --endpoint-url=${AWS_ENDPOINT_URL} --storage-class STANDARD
