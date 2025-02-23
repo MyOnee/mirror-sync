@@ -17,7 +17,7 @@ jobs:
       - name: Setup APT Mirror
         run: |
           mkdir -p /var/spool/apt-mirror/mirror
-          sudo curl -L https://file.curvee.eu.org/termux.txt -o /etc/apt/mirror.list
+          sudo curl -L https://file.curvee.eu.org/file/termux.txt -o /etc/apt/mirror.list
 
       - name: Run APT Mirror
         run: sudo apt-mirror
